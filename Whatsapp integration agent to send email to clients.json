@@ -1,0 +1,205 @@
+{
+  "name": "Whatsapp integration agent to send email to clients",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d676fa0c-aaf0-4d67-9941-37b4ce098697",
+      "name": "WhatsApp Trigger",
+      "webhookId": "2036fb79-d20e-4476-9298-6bc47902ecb0",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "xnGUGQMQk88lk1n7",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "796792d3-d7b6-4172-bcb1-a2e89bc7ae7b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "wRIHxYIuFYxj1eBA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "850299331499017",
+        "recipientPhoneNumber": "+923085678014",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        0
+      ],
+      "id": "3eb4eba3-53aa-4e2d-8eee-3e48a367a9db",
+      "name": "Send message",
+      "webhookId": "cdb333d5-51ac-4420-9a5a-247b0bde94bb",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "jW4oIJAFLSQqgg0k",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant that handles user requests from WhatsApp.\nWhen the user asks to send an email, first fetch the email from Google contact tools and then use the Gmail tool with correct recipient, subject decide by yourself, and body.\nAfter sending the email, confirm the action back to the user in WhatsApp.\nRespond professionally and clearly.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "eb1da277-7b9e-4540-b1ab-32a7902f9d9d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        240
+      ],
+      "id": "5220cab8-5822-4c05-9573-70b6fa5f74d1",
+      "name": "Send a message in Gmail",
+      "webhookId": "44369fdf-3680-4644-a4fb-de47f1f91b66",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "l3GLi3DBbC7tRTgp",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "fields": [
+          "emailAddresses",
+          "names"
+        ],
+        "useQuery": true,
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        320,
+        256
+      ],
+      "id": "bd71969f-b7ac-4bb5-9be7-6d76c3c3dc12",
+      "name": "Get many contacts in Google Contacts",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "URhEOYQRn8eoS4WP",
+          "name": "Google Contacts account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many contacts in Google Contacts": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4730c6c4-53a9-4267-89be-9b17085185b4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df2dc7cad948035ed9bcfeca2b0b9347c35bd5b90ebb284d305df6b5e3a21f5f"
+  },
+  "id": "Im3CMHWLmXmye73A",
+  "tags": []
+}
